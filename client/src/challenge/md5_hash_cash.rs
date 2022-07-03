@@ -72,3 +72,4 @@ fn check_number_of_bit_at_zero(number: &[u8], expected_of_zero: u32) -> bool {
     }
     return true;
 }
+
