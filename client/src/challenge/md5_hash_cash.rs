@@ -1,6 +1,5 @@
-use std::ops::{Add, Deref};
+use std::ops::Deref;
 use std::sync::{Arc, Condvar, Mutex};
-use std::sync::atomic::AtomicUsize;
 use std::thread;
 use md5;
 use md5::Digest;
@@ -9,7 +8,7 @@ use common::challenge::models_md5_hash_cash::{MD5HashCashInput, MD5HashCashOutpu
 pub fn md5_challenge_resolver(input: MD5HashCashInput) -> MD5HashCashOutput {
     let pair = Arc::new((Mutex::<u64>::new(0), Condvar::new(), Mutex::new(false), Mutex::<u64>::new(0), Mutex::<Digest>::new(Digest([0;16]))));
 
-    for i in 0..150 {
+    for _ in 0..10 {
         let pair_clone = Arc::clone(&pair);
         let input_clone = input.clone();
 

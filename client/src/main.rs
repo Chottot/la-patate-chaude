@@ -5,11 +5,8 @@ mod challenge;
 use rand::Rng;
 use std::io::Read;
 use std::net::{TcpStream};
-use serde::de::Unexpected::Str;
 
 use common::models::{Challenge, ChallengeAnswer, ChallengeResult, EndOfGame, Message, PublicPlayer, RoundSummary};
-use common::challenge::models_monstrous_maze::{MonstrousMazeInput, MonstrousMazeOutput};
-use common::challenge::models_recover_secret::{RecoverSecretInput, RecoverSecretOutput};
 use crate::challenge::md5_hash_cash::md5_challenge_resolver;
 use crate::challenge::monstrous_maze::maze_challenge_resolver;
 use crate::challenge::recover_secret::secret_challenge_resolver;
@@ -26,13 +23,13 @@ fn on_leader_board(leader_board: &Vec<PublicPlayer>){
 }
 
 fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState){
-    let mut chalenge_answer :ChallengeAnswer;
+    let challenge_answer:ChallengeAnswer;
     let mut rng = rand::thread_rng();
 
     match challenge {
-        Challenge::MD5HashCash(input) => { chalenge_answer = ChallengeAnswer::MD5HashCash( md5_challenge_resolver(input)); }
-        Challenge::MonstrousMaze(input) =>  { chalenge_answer = ChallengeAnswer::MonstrousMaze( maze_challenge_resolver(input)); }
-        Challenge::RecoverSecret(input) =>  { chalenge_answer = ChallengeAnswer::RecoverSecret( secret_challenge_resolver(input)); }
+        Challenge::MD5HashCash(input) => { challenge_answer = ChallengeAnswer::MD5HashCash( md5_challenge_resolver(input)); }
+        Challenge::MonstrousMaze(input) =>  { challenge_answer = ChallengeAnswer::MonstrousMaze( maze_challenge_resolver(input)); }
+        Challenge::RecoverSecret(input) =>  { challenge_answer = ChallengeAnswer::RecoverSecret( secret_challenge_resolver(input)); }
     }
 
     let mut index = rng.gen_range(0..game_state.players.len());
@@ -42,7 +39,7 @@ fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState
 
     let next_target = game_state.players[index].name.clone();
 
-    let challenge_result = ChallengeResult{ answer: chalenge_answer, next_target};
+    let challenge_result = ChallengeResult{ answer: challenge_answer, next_target};
     send_message(stream, Message::ChallengeResult(challenge_result));
 }
 
