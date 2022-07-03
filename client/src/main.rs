@@ -45,7 +45,6 @@ fn on_challenge(stream: &TcpStream, challenge: Challenge){
 
 fn on_round_summary(stream: &TcpStream, summary: RoundSummary){
     println!("RoundSummary: {summary:?}");
-
 }
 
 fn on_end_of_game(end_of_game: EndOfGame){
@@ -65,10 +64,10 @@ fn main_loop(mut stream: &TcpStream, name: &String){
             Ok(_) => {}
             Err(_) => { continue; }
         }
-        println!("receiving message");
+      //  println!("receiving message");
 
         let message_size = u32::from_be_bytes(buf);
-        println!("message_size: {message_size:?}");
+   //     println!("message_size: {message_size:?}");
 
         let mut message_buf = vec![0; message_size as usize];
         stream.read_exact(&mut message_buf).expect("failed to read message");
@@ -92,10 +91,10 @@ fn main_loop(mut stream: &TcpStream, name: &String){
 
 fn buffer_to_object(message_buf: &mut Vec<u8>) -> Message {
     let message = std::str::from_utf8(&message_buf).expect("failed to parse message");
-    println!("message: {message:?}");
+  //  println!("message: {message:?}");
 
     let record: Message = serde_json::from_str(&message).expect("failed to serialize message");
-    println!("message: {record:?}");
+  //  println!("message: {record:?}");
     record
 }
 
