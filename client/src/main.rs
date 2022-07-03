@@ -1,34 +1,33 @@
-extern crate core;
-
 mod server_communication;
 mod player_init;
 mod challenge;
 
+use rand::Rng;
 use std::io::Read;
 use std::net::{TcpStream};
+use serde::de::Unexpected::Str;
 
 use common::models::{Challenge, ChallengeAnswer, ChallengeResult, EndOfGame, Message, PublicPlayer, RoundSummary};
 use common::challenge::models_monstrous_maze::{MonstrousMazeInput, MonstrousMazeOutput};
 use common::challenge::models_recover_secret::{RecoverSecretInput, RecoverSecretOutput};
 use crate::challenge::md5_hash_cash::md5_challenge_resolver;
+use crate::challenge::monstrous_maze::maze_challenge_resolver;
+use crate::challenge::recover_secret::secret_challenge_resolver;
 use crate::player_init::{on_subscribe_result, on_welcome};
 use crate::server_communication::send_message;
 
+struct GameState{
+    pub name: String,
+    pub players: Vec<PublicPlayer>,
+}
 
-fn on_leader_board(leader_board: Vec<PublicPlayer>){
+fn on_leader_board(leader_board: &Vec<PublicPlayer>){
     println!("LeaderBoard: {leader_board:?}");
 }
 
-fn maze_challenge_resolver(input: MonstrousMazeInput) -> MonstrousMazeOutput{
-    return MonstrousMazeOutput{ path: String::from("")};
-}
-
-fn secret_challenge_resolver(input: RecoverSecretInput) -> RecoverSecretOutput{
-    return RecoverSecretOutput{secret_sentence: String::from("")}
-}
-
-fn on_challenge(stream: &TcpStream, challenge: Challenge){
-    let chalenge_answer :ChallengeAnswer;
+fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState){
+    let mut chalenge_answer :ChallengeAnswer;
+    let mut rng = rand::thread_rng();
 
     match challenge {
         Challenge::MD5HashCash(input) => { chalenge_answer = ChallengeAnswer::MD5HashCash( md5_challenge_resolver(input)); }
@@ -36,8 +35,12 @@ fn on_challenge(stream: &TcpStream, challenge: Challenge){
         Challenge::RecoverSecret(input) =>  { chalenge_answer = ChallengeAnswer::RecoverSecret( secret_challenge_resolver(input)); }
     }
 
-    let next_target = String::from("");
+    let mut index = rng.gen_range(0..game_state.players.len());
+    while game_state.players[index].name == game_state.name {
+        index = rng.gen_range(0..game_state.players.len());
+    }
 
+    let next_target = game_state.players[index].name.clone();
 
     let challenge_result = ChallengeResult{ answer: chalenge_answer, next_target};
     send_message(stream, Message::ChallengeResult(challenge_result));
@@ -54,6 +57,7 @@ fn on_end_of_game(end_of_game: EndOfGame){
 fn main_loop(mut stream: &TcpStream, name: &String){
 
     let mut buf = [0; 4];
+    let mut game_state = GameState{players: vec![], name: name.clone()};
 
     send_message(stream, Message::Hello);
 
@@ -79,8 +83,8 @@ fn main_loop(mut stream: &TcpStream, name: &String){
             Message::Welcome(welcome) => { on_welcome(stream, welcome, name)}
             Message::Subscribe(_) => {}
             Message::SubscribeResult(subscribe_result) => { on_subscribe_result( subscribe_result); }
-            Message::PublicLeaderBoard(leader_board) => { on_leader_board(leader_board); }
-            Message::Challenge(challenge) => { on_challenge(stream, challenge);}
+            Message::PublicLeaderBoard(leader_board) => { game_state.players = leader_board; on_leader_board(&game_state.players); }
+            Message::Challenge(challenge) => { on_challenge(stream, challenge, &game_state);}
             Message::RoundSummary(summary) => {on_round_summary(stream, summary);}
             Message::EndOfGame(end_of_game) => {on_end_of_game(end_of_game); break;}
             Message::ChallengeResult(_) => {}
