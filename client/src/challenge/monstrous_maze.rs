@@ -1,13 +1,17 @@
 use common::challenge::models_monstrous_maze::{MonstrousMazeInput, MonstrousMazeOutput};
 
 pub fn maze_challenge_resolver(input: MonstrousMazeInput) -> MonstrousMazeOutput {
-    let grid = input.grid.split("\n")
+    let grid = input
+        .grid
+        .split("\n")
         .collect::<Vec<&str>>()
         .into_iter()
         .map(|x| x.chars().collect::<Vec<char>>())
         .collect::<Vec<Vec<char>>>();
 
-    return MonstrousMazeOutput { path: find_start_and_end_of_maze(grid) };
+    return MonstrousMazeOutput {
+        path: find_start_and_end_of_maze(grid),
+    };
 }
 
 fn find_start_and_end_of_maze(grid: Vec<Vec<char>>) -> String {
@@ -40,26 +44,44 @@ fn find_start_and_end_of_maze(grid: Vec<Vec<char>>) -> String {
     return find_path(&visited, end_x, end_y);
 }
 
-fn update_around_cell(grid: &Vec<Vec<char>>, visited: &mut Vec<Vec<i32>>, x: usize, y: usize, queue: &mut Vec<(usize, usize)>) {
-    if (y > 0) && (grid[y - 1][x] != '#') && ((visited[y - 1][x] > (visited[y][x] + 1)) || (visited[y - 1][x] == -1)) {
+fn update_around_cell(
+    grid: &Vec<Vec<char>>,
+    visited: &mut Vec<Vec<i32>>,
+    x: usize,
+    y: usize,
+    queue: &mut Vec<(usize, usize)>,
+) {
+    if (y > 0)
+        && (grid[y - 1][x] != '#')
+        && ((visited[y - 1][x] > (visited[y][x] + 1)) || (visited[y - 1][x] == -1))
+    {
         visited[y - 1][x] = visited[y][x] + 1;
         queue.push((x, y - 1));
     }
-    if y < grid.len() - 1 && grid[y + 1][x] != '#' && ((visited[y + 1][x] > (visited[y][x] + 1)) || (visited[y + 1][x] == -1)) {
+    if y < grid.len() - 1
+        && grid[y + 1][x] != '#'
+        && ((visited[y + 1][x] > (visited[y][x] + 1)) || (visited[y + 1][x] == -1))
+    {
         visited[y + 1][x] = visited[y][x] + 1;
         queue.push((x, y + 1));
     }
-    if x > 0 && grid[y][x - 1] != '#' && ((visited[y][x - 1] > (visited[y][x] + 1)) || (visited[y][x - 1] == -1)) {
+    if x > 0
+        && grid[y][x - 1] != '#'
+        && ((visited[y][x - 1] > (visited[y][x] + 1)) || (visited[y][x - 1] == -1))
+    {
         visited[y][x - 1] = visited[y][x] + 1;
         queue.push((x - 1, y));
     }
-    if x < grid[0].len() - 1 && grid[y][x + 1] != '#' && ((visited[y][x + 1] > (visited[y][x] + 1)) || (visited[y][x + 1] == -1)) {
+    if x < grid[0].len() - 1
+        && grid[y][x + 1] != '#'
+        && ((visited[y][x + 1] > (visited[y][x] + 1)) || (visited[y][x + 1] == -1))
+    {
         visited[y][x + 1] = visited[y][x] + 1;
         queue.push((x + 1, y));
     }
 }
 
-fn find_path(visited: &Vec<Vec<i32>>,end_x: usize, end_y: usize) -> String {
+fn find_path(visited: &Vec<Vec<i32>>, end_x: usize, end_y: usize) -> String {
     let mut path = String::new();
     let mut x = end_x;
     let mut y = end_y;
@@ -98,7 +120,7 @@ fn find_next_cell(visited: &Vec<Vec<i32>>, x: usize, y: usize) -> (usize, usize)
     (min_x, min_y)
 }
 
-fn grid_to_char(new_x: usize, new_y: usize, previous_x: usize, previous_y: usize ) -> char {
+fn grid_to_char(new_x: usize, new_y: usize, previous_x: usize, previous_y: usize) -> char {
     return if new_x < previous_x {
         '>'
     } else if new_x > previous_x {
@@ -109,5 +131,5 @@ fn grid_to_char(new_x: usize, new_y: usize, previous_x: usize, previous_y: usize
         '^'
     } else {
         ' '
-    }
+    };
 }

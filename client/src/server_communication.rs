@@ -1,6 +1,6 @@
+use common::models::Message;
 use std::io::Write;
 use std::net::TcpStream;
-use common::models::Message;
 
 pub fn send_message(mut stream: &TcpStream, message: Message) {
     let serialized = serde_json::to_string(&message).unwrap();

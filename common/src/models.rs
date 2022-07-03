@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
 use crate::challenge::models_md5_hash_cash::{MD5HashCashInput, MD5HashCashOutput};
 use crate::challenge::models_monstrous_maze::{MonstrousMazeInput, MonstrousMazeOutput};
 use crate::challenge::models_recover_secret::{RecoverSecretInput, RecoverSecretOutput};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Hello {}
@@ -19,7 +19,7 @@ pub struct Subscribe {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum SubscribeError {
     AlreadyRegistered,
-    InvalidName
+    InvalidName,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,7 +35,7 @@ pub struct PublicPlayer {
     pub score: i32,
     pub steps: u32,
     pub is_active: bool,
-    pub total_used_time: f64
+    pub total_used_time: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -63,13 +63,13 @@ pub enum ChallengeValue {
     Unreachable,
     Timeout,
     BadResult { used_time: f64, next_target: String },
-    Ok { used_time: f64, next_target: String }
+    Ok { used_time: f64, next_target: String },
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReportedChallengeResult {
     pub name: String,
-    pub value: ChallengeValue
+    pub value: ChallengeValue,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
