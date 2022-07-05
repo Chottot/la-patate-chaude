@@ -21,9 +21,7 @@ struct GameState {
     pub md5_thread: u64,
 }
 
-fn on_leader_board(leader_board: &Vec<PublicPlayer>) {
-   // println!("LeaderBoard: {leader_board:?}");
-}
+fn on_leader_board(leader_board: &Vec<PublicPlayer>) {}
 
 fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState) {
     let challenge_answer: ChallengeAnswer;
@@ -55,20 +53,14 @@ fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState
     send_message(stream, Message::ChallengeResult(challenge_result));
 }
 
-fn on_round_summary(stream: &TcpStream, summary: RoundSummary) {
-  //  println!("RoundSummary: {summary:?}");
-}
+fn on_round_summary(stream: &TcpStream, summary: RoundSummary) {}
 
-fn on_end_of_game(end_of_game: EndOfGame) {
-   // println!("EndOfGame: {end_of_game:?}");
-}
+fn on_end_of_game(end_of_game: EndOfGame) {}
 
 fn main_loop(mut stream: &TcpStream, game_state: &mut GameState) {
     let mut buf = [0; 4];
 
     send_message(stream, Message::Hello);
-
-    println!("Listening");
 
     loop {
         match stream.read_exact(&mut buf) {
@@ -77,10 +69,7 @@ fn main_loop(mut stream: &TcpStream, game_state: &mut GameState) {
                 continue;
             }
         }
-        //  println!("receiving message");
-
         let message_size = u32::from_be_bytes(buf);
-        //     println!("message_size: {message_size:?}");
 
         let mut message_buf = vec![0; message_size as usize];
         stream
@@ -129,9 +118,10 @@ fn main() {
     let mut md5_nb_thread: u64 = 10;
 
     for mut i in 2..std::env::args().len() {
-        if std::env::args().nth(i).unwrap() == "--md5t" {
+        if std::env::args().nth(i).expect("failed to get arg") == "--md5t" {
             i += 1;
-            md5_nb_thread = std::env::args().nth(i).unwrap().parse().unwrap();
+            md5_nb_thread = std::env::args().nth(i).expect("need to specifies a number after \"--md5t\"")
+                .parse().expect("need to specifies a valid number after \"--md5t\"");
         }
     }
 

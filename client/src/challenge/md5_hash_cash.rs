@@ -5,8 +5,6 @@ use std::ops::Deref;
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 
-use byteorder::{BigEndian, ReadBytesExt};
-
 pub fn md5_challenge_resolver(input: MD5HashCashInput, nb_thread: u64) -> MD5HashCashOutput {
     let pair = Arc::new((
         Condvar::new(),
@@ -25,16 +23,16 @@ pub fn md5_challenge_resolver(input: MD5HashCashInput, nb_thread: u64) -> MD5Has
             let (cvar, ended, res) = &*pair_clone;
 
             for j in min..max {
-                if *ended.lock().unwrap() == true {
+                if *ended.lock().expect("failed to lock mutex ended 1") == true {
                     break;
                 } else {
-                    let mut digest: Digest = md5::compute(format!("{:016X}{}", j, input_clone.message));
+                    let digest: Digest = md5::compute(format!("{:016X}{}", j, input_clone.message));
 
                     if check_number_of_bit_at_zero(digest.as_slice(), input_clone.complexity) == true {
-                        let mut ended_mutex = ended.lock().unwrap();
+                        let mut ended_mutex = ended.lock().expect("failed to lock mutex ended 2");
                         if *ended_mutex == false {
                             *ended_mutex = true;
-                            *res.lock().unwrap() = MD5HashCashOutput { seed: j, hashcode: format!("{:032X}", digest) };
+                            *res.lock().expect("failed to lock res mutex 1") = MD5HashCashOutput { seed: j, hashcode: format!("{:032X}", digest) };
                             cvar.notify_one();
                         }
 
@@ -47,12 +45,12 @@ pub fn md5_challenge_resolver(input: MD5HashCashInput, nb_thread: u64) -> MD5Has
 
     let (cvar, ended, res) = &*pair;
 
-    let mut ended_mutex = ended.lock().unwrap();
+    let mut ended_mutex = ended.lock().expect("failed to lock mutex ended 3");
     while *ended_mutex == false {
-        ended_mutex = cvar.wait(ended_mutex).unwrap();
+        ended_mutex = cvar.wait(ended_mutex).expect("failed to wait on condvar");
     }
 
-    return res.lock().unwrap().deref().clone();
+    return res.lock().expect("failed to lock res mutex 2").deref().clone();
 }
 
 fn check_number_of_bit_at_zero(number: &[u8], expected_of_zero: u32) -> bool {

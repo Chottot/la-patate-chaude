@@ -35,7 +35,7 @@ fn find_start_and_end_of_maze(grid: Vec<Vec<char>>) -> String {
     let mut queue = Vec::new();
     queue.push((start_x, start_y));
     while !queue.is_empty() {
-        let (x, y) = queue.pop().unwrap();
+        let (x, y) = queue.pop().expect("failed to pop queue");
         if grid[y][x] == 'X' {
             break;
         }
