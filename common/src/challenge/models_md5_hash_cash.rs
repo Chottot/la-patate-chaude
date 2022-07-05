@@ -8,7 +8,7 @@ pub struct MD5HashCashInput {
     pub message: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MD5HashCashOutput {
     // Seed used to solve the challenge
     pub seed: u64,

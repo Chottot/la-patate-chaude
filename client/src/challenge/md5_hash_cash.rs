@@ -5,69 +5,63 @@ use std::ops::Deref;
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 
-pub fn md5_challenge_resolver(input: MD5HashCashInput) -> MD5HashCashOutput {
+use byteorder::{BigEndian, ReadBytesExt};
+
+pub fn md5_challenge_resolver(input: MD5HashCashInput, nb_thread: u64) -> MD5HashCashOutput {
     let pair = Arc::new((
-        Mutex::<u64>::new(0),
         Condvar::new(),
         Mutex::new(false),
-        Mutex::<u64>::new(0),
-        Mutex::<Digest>::new(Digest([0; 16])),
-    ));
+        Mutex::<MD5HashCashOutput>::new(MD5HashCashOutput { seed: 0, hashcode: "".to_string() })));
 
-    for _ in 0..10 {
+    let step = u64::MAX / nb_thread;
+
+    for i in 0..nb_thread {
         let pair_clone = Arc::clone(&pair);
         let input_clone = input.clone();
+        let min = step * i;
+        let max = step * (i + 1);
 
         thread::spawn(move || {
-            let (lock, cvar, ended, res_seed, res_digest) = &*pair_clone;
+            let (cvar, ended, res) = &*pair_clone;
 
-            let mut seed_mutex = lock.lock().unwrap();
-            *seed_mutex += 1;
-            let mut seed = seed_mutex.deref().clone();
-            drop(seed_mutex);
+            for j in min..max {
+                if *ended.lock().unwrap() == true {
+                    break;
+                } else {
+                    let mut digest: Digest = md5::compute(format!("{:016X}{}", j, input_clone.message));
 
-            let mut digest: Digest = md5::compute(format!("{:016X}{}", seed, input_clone.message));
-            while check_number_of_bit_at_zero(digest.as_slice(), input_clone.complexity) == false
-                && *ended.lock().unwrap() == false
-            {
-                seed_mutex = lock.lock().unwrap();
-                *seed_mutex += 1;
-                seed = seed_mutex.deref().clone();
-                drop(seed_mutex);
+                    if check_number_of_bit_at_zero(digest.as_slice(), input_clone.complexity) == true {
+                        let mut ended_mutex = ended.lock().unwrap();
+                        if *ended_mutex == false {
+                            *ended_mutex = true;
+                            *res.lock().unwrap() = MD5HashCashOutput { seed: j, hashcode: format!("{:032X}", digest) };
+                            cvar.notify_one();
+                        }
 
-                digest = md5::compute(format!("{:016X}{}", seed, input_clone.message.clone()));
-            }
-
-            let mut ended_mutex = ended.lock().unwrap();
-
-            if *ended_mutex == false {
-                *ended_mutex = true;
-                *res_digest.lock().unwrap() = digest;
-                *res_seed.lock().unwrap() = seed;
-                cvar.notify_one();
+                        break;
+                    }
+                }
             }
         });
     }
 
-    let (_, cvar, ended, res_seed, res_digest) = &*pair;
+    let (cvar, ended, res) = &*pair;
 
     let mut ended_mutex = ended.lock().unwrap();
     while *ended_mutex == false {
         ended_mutex = cvar.wait(ended_mutex).unwrap();
     }
 
-    return MD5HashCashOutput {
-        seed: *res_seed.lock().unwrap(),
-        hashcode: format!("{:032X}", *res_digest.lock().unwrap()),
-    };
+    return res.lock().unwrap().deref().clone();
 }
 
 fn check_number_of_bit_at_zero(number: &[u8], expected_of_zero: u32) -> bool {
     let mut number_as_bits: u128 = number[0] as u128;
     for i in 1..number.len() {
         number_as_bits = number_as_bits << 8;
-        number_as_bits += number[i] as u128;
+        number_as_bits &= number[i] as u128;
     }
+
     number_as_bits = number_as_bits.reverse_bits();
     let mut number_of_zero = 0;
     while number_of_zero < expected_of_zero {

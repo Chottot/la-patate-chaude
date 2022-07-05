@@ -18,10 +18,11 @@ use common::models::{
 struct GameState {
     pub name: String,
     pub players: Vec<PublicPlayer>,
+    pub md5_thread: u64,
 }
 
 fn on_leader_board(leader_board: &Vec<PublicPlayer>) {
-    println!("LeaderBoard: {leader_board:?}");
+   // println!("LeaderBoard: {leader_board:?}");
 }
 
 fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState) {
@@ -30,7 +31,7 @@ fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState
 
     match challenge {
         Challenge::MD5HashCash(input) => {
-            challenge_answer = ChallengeAnswer::MD5HashCash(md5_challenge_resolver(input));
+            challenge_answer = ChallengeAnswer::MD5HashCash(md5_challenge_resolver(input, game_state.md5_thread));
         }
         Challenge::MonstrousMaze(input) => {
             challenge_answer = ChallengeAnswer::MonstrousMaze(maze_challenge_resolver(input));
@@ -55,19 +56,15 @@ fn on_challenge(stream: &TcpStream, challenge: Challenge, game_state: &GameState
 }
 
 fn on_round_summary(stream: &TcpStream, summary: RoundSummary) {
-    println!("RoundSummary: {summary:?}");
+  //  println!("RoundSummary: {summary:?}");
 }
 
 fn on_end_of_game(end_of_game: EndOfGame) {
-    println!("EndOfGame: {end_of_game:?}");
+   // println!("EndOfGame: {end_of_game:?}");
 }
 
-fn main_loop(mut stream: &TcpStream, name: &String) {
+fn main_loop(mut stream: &TcpStream, game_state: &mut GameState) {
     let mut buf = [0; 4];
-    let mut game_state = GameState {
-        players: vec![],
-        name: name.clone(),
-    };
 
     send_message(stream, Message::Hello);
 
@@ -94,7 +91,7 @@ fn main_loop(mut stream: &TcpStream, name: &String) {
 
         match record {
             Message::Hello => {}
-            Message::Welcome(welcome) => on_welcome(stream, welcome, name),
+            Message::Welcome(welcome) => on_welcome(stream, welcome, &game_state.name),
             Message::Subscribe(_) => {}
             Message::SubscribeResult(subscribe_result) => {
                 on_subscribe_result(subscribe_result);
@@ -129,11 +126,28 @@ fn buffer_to_object(message_buf: &mut Vec<u8>) -> Message {
 
 fn main() {
     let name = std::env::args().nth(1).expect("no name given");
+    let mut md5_nb_thread: u64 = 10;
+
+    for mut i in 2..std::env::args().len() {
+        if std::env::args().nth(i).unwrap() == "--md5t" {
+            i += 1;
+            md5_nb_thread = std::env::args().nth(i).unwrap().parse().unwrap();
+        }
+    }
+
+    println!("test: {md5_nb_thread}");
+    let mut game_state = GameState {
+        players: vec![],
+        name: name.clone(),
+        md5_thread: md5_nb_thread,
+    };
 
     let stream = TcpStream::connect("localhost:7878");
+
+
     match stream {
         Ok(stream) => {
-            main_loop(&stream, &name);
+            main_loop(&stream, &mut game_state);
         }
         Err(err) => panic!("Cannot connect: {err}"),
     }
