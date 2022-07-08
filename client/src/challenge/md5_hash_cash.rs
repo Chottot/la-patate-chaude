@@ -57,7 +57,7 @@ fn check_number_of_bit_at_zero(number: &[u8], expected_of_zero: u32) -> bool {
     let mut number_as_bits: u128 = number[0] as u128;
     for i in 1..number.len() {
         number_as_bits = number_as_bits << 8;
-        number_as_bits &= number[i] as u128;
+        number_as_bits |= number[i] as u128;
     }
 
     number_as_bits = number_as_bits.reverse_bits();
@@ -71,4 +71,31 @@ fn check_number_of_bit_at_zero(number: &[u8], expected_of_zero: u32) -> bool {
         number_as_bits = number_as_bits >> 1;
     }
     return true;
+}
+
+#[cfg(test)]
+mod md5_challenge_resolver_tests {
+    use common::challenge::models_md5_hash_cash::MD5HashCashInput;
+    use crate::md5_challenge_resolver;
+
+    #[test]
+    fn should_find_the_first_seed_for_hello() {
+        let result = md5_challenge_resolver(MD5HashCashInput{ complexity: 9, message: "hello".to_string()}, 1);
+        assert_eq!(844, result.seed);
+        assert_eq!("00441745D9BDF8E5D3C7872AC9DBB2C3", result.hashcode);
+    }
+
+    #[test]
+    fn should_find_the_first_seed_for_paul() {
+        let result = md5_challenge_resolver(MD5HashCashInput{ complexity: 17, message: "Paul".to_string()}, 1);
+        assert_eq!(163776, result.seed);
+        assert_eq!("00005BC0D8B0898445DC6493EAEE0555", result.hashcode);
+    }
+
+    #[test]
+    fn should_find_the_first_seed_for_clement() {
+        let result = md5_challenge_resolver(MD5HashCashInput{ complexity: 15, message: "Clément".to_string()}, 1);
+        assert_eq!(5783, result.seed);
+        assert_eq!("00016A6CF04BAE18BCAA4D69B854CFCC", result.hashcode);
+    }
 }

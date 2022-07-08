@@ -133,3 +133,26 @@ fn grid_to_char(new_x: usize, new_y: usize, previous_x: usize, previous_y: usize
         ' '
     };
 }
+
+#[cfg(test)]
+mod monster_maze_resolver_tests {
+    use super::*;
+
+    #[test]
+    fn should_find_path_to_end_on_stray_line() {
+        let result = maze_challenge_resolver(MonstrousMazeInput { grid: "#Y   X#".to_string(), endurance: 0 });
+        assert_eq!(">>>>>", result.path);
+    }
+
+    #[test]
+    fn should_find_the_first_seed_for_hello() {
+        let result = maze_challenge_resolver(MonstrousMazeInput { grid:
+        "#Y######\n\
+         # #    #\n\
+         # # # ##\n\
+         #   # X#\n\
+         ########".to_string(), endurance: 0 });
+
+        assert_eq!(">vvv>>^^>>vv>", result.path);
+    }
+}
