@@ -145,7 +145,7 @@ mod monster_maze_resolver_tests {
     }
 
     #[test]
-    fn should_find_the_first_seed_for_hello() {
+    fn should_find_path_to_end_on_maze() {
         let result = maze_challenge_resolver(MonstrousMazeInput { grid:
         "#Y######\n\
          # #    #\n\
