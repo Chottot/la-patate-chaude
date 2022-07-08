@@ -140,19 +140,19 @@ mod monster_maze_resolver_tests {
 
     #[test]
     fn should_find_path_to_end_on_stray_line() {
-        let result = maze_challenge_resolver(MonstrousMazeInput { grid: "#Y   X#".to_string(), endurance: 0 });
-        assert_eq!(">>>>>", result.path);
+        let result = maze_challenge_resolver(MonstrousMazeInput { grid: "#I   X#".to_string(), endurance: 0 });
+        assert_eq!(">>>>", result.path);
     }
 
     #[test]
     fn should_find_path_to_end_on_maze() {
         let result = maze_challenge_resolver(MonstrousMazeInput { grid:
-        "#Y######\n\
+        "#I######\n\
          # #    #\n\
          # # # ##\n\
          #   # X#\n\
          ########".to_string(), endurance: 0 });
 
-        assert_eq!(">vvv>>^^>>vv>", result.path);
+        assert_eq!("vvv>>^^>>vv>", result.path);
     }
 }
